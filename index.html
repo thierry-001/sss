@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>🔥 Filtro — CANCELADO 🔥</title>
+  <style>
+    :root {
+      --bg-black:#0b0b0b;
+      --red:#c81b1b;
+      --white:#ffffff;
+      --fire1:#ff4500;
+      --fire2:#ff8c00;
+      --fire3:#ffd700;
+    }
+
+    html,body {
+      height:100%;
+      margin:0;
+      background:linear-gradient(180deg,var(--bg-black),#2b0000);
+      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;
+      overflow-x:hidden;
+    }
+
+    .app {
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      padding:12px;
+      box-sizing:border-box;
+    }
+
+    .stage {
+      position:relative;
+      width:clamp(280px,86vw,720px);
+      aspect-ratio:3/4;
+      border-radius:20px;
+      overflow:hidden;
+      box-shadow:0 10px 40px rgba(0,0,0,0.7);
+      background:#000;
+    }
+
+    video, canvas {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    /* 🔥 Moldura de fogo animada */
+    .stage::before, .stage::after {
+      content:"";
+      position:absolute;
+      inset:-5px;
+      border-radius:24px;
+      z-index:5;
+      pointer-events:none;
+      animation:flames 1.5s infinite alternate ease-in-out;
+    }
+
+    .stage::before {
+      background:conic-gradient(from 0deg, var(--fire1), var(--fire2), var(--fire3), var(--fire1));
+      filter:blur(14px) brightness(1.2);
+      opacity:0.7;
+      animation-delay:0s;
+    }
+
+    .stage::after {
+      background:conic-gradient(from 180deg, var(--fire3), var(--fire2), var(--fire1), var(--fire3));
+      filter:blur(22px);
+      mix-blend-mode:screen;
+      opacity:0.5;
+      animation-delay:.5s;
+    }
+
+    @keyframes flames {
+      0% {transform:scale(1) rotate(0deg);}
+      50% {transform:scale(1.04) rotate(1deg);}
+      100% {transform:scale(1.02) rotate(-1deg);}
+    }
+
+    /* Overlay e selo CANCELADO */
+    .overlay {
+      pointer-events:none;
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:10;
+    }
+
+    .stamp {
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%) rotate(-6deg);
+      font-weight:900;
+      letter-spacing:6px;
+      font-size:clamp(48px,12vw,140px);
+      text-transform:uppercase;
+      color:var(--red);
+      text-align:center;
+      filter:drop-shadow(0 6px 14px rgba(0,0,0,0.7));
+      animation:pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%,100% {text-shadow:0 0 10px var(--red), 0 0 30px var(--red);}
+      50% {text-shadow:0 0 25px var(--fire2), 0 0 60px var(--fire3);}
+    }
+
+    .stamp::before {
+      content:"CANCELADO";
+      position:absolute;
+      inset:0;
+      color:var(--white);
+      transform:translate(6px,6px);
+      opacity:0.12;
+      font-weight:900;
+      z-index:-1;
+    }
+
+    /* Controles */
+    .controls {
+      margin-top:16px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+    }
+
+    button, select {
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--white);
+      padding:8px 12px;
+      border-radius:10px;
+      font-size:15px;
+      backdrop-filter:blur(6px);
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    button:hover {background:rgba(255,255,255,0.15);}
+    .primary {background:var(--red);border-color:rgba(0,0,0,0.2);color:var(--white);}
+    .small {padding:6px 8px;font-size:13px;}
+
+    .topbar {
+      width:100%;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+      color:var(--white);
+    }
+
+    .hint {color:rgba(255,255,255,0.7);font-size:13px;}
+    footer {margin-top:10px;color:rgba(255,255,255,0.7);font-size:13px;}
+
+    @media (max-width:420px){
+      .stamp{letter-spacing:3px;transform:translate(-50%,-50%) rotate(-3deg);}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">🔥 Filtro — CANCELADO 🔥</div>
+      <div class="hint">Permita acesso à câmera • Tire sua foto</div>
+    </div>
+
+    <div class="stage" id="stage">
+      <video id="video" playsinline autoplay muted></video>
+      <canvas id="captureCanvas" style="display:none"></canvas>
+      <div class="overlay">
+        <div class="stamp">CANCELADO</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <select id="cameraSelect" class="small"></select>
+      <button id="flipBtn" class="small">Trocar câmera</button>
+      <button id="startBtn" class="primary">Iniciar câmera</button>
+      <button id="captureBtn" style="display:none" class="primary">Tirar foto</button>
+      <button id="downloadBtn" style="display:none">Baixar imagem</button>
+      <button id="resetBtn" style="display:none">Tirar outra</button>
+    </div>
+
+    <footer>Feito para o projeto <b>Cultura do Cancelamento</b> — thierry 🔵</footer>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('captureCanvas');
+    const cameraSelect = document.getElementById('cameraSelect');
+    const flipBtn = document.getElementById('flipBtn');
+    const startBtn = document.getElementById('startBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const stage = document.getElementById('stage');
+
+    let currentStream = null;
+    let devices = [];
+
+    async function listCameras(){
+      try{
+        const all = await navigator.mediaDevices.enumerateDevices();
+        devices = all.filter(d => d.kind === 'videoinput');
+        cameraSelect.innerHTML = '';
+        devices.forEach((d,i)=>{
+          const opt = document.createElement('option');
+          opt.value = d.deviceId;
+          opt.text = d.label || `Câmera ${i+1}`;
+          cameraSelect.appendChild(opt);
+        });
+      }catch(e){console.warn('Erro ao listar câmeras', e);}
+    }
+
+    async function startCamera(deviceId){
+      if(currentStream){
+        currentStream.getTracks().forEach(t=>t.stop());
+      }
+      const constraints = {
+        audio:false,
+        video: deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'user'}
+      };
+      try{
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = currentStream;
+        await video.play().catch(()=>{});
+        captureBtn.style.display = 'inline-block';
+        startBtn.style.display = 'none';
+      }catch(err){
+        alert('Não foi possível acessar a câmera.\n' + err.message);
+      }
+    }
+
+    cameraSelect.addEventListener('change', e=> startCamera(e.target.value));
+    flipBtn.addEventListener('click', ()=>{
+      if(devices.length < 2) return;
+      const idx = devices.findIndex(d => d.deviceId === cameraSelect.value);
+      const next = devices[(idx + 1) % devices.length];
+      startCamera(next.deviceId);
+    });
+
+    startBtn.addEventListener('click', async ()=>{
+      await listCameras();
+      const first = devices[0];
+      if(first) startCamera(first.deviceId);
+    });
+
+    captureBtn.addEventListener('click', ()=>captureImage(false));
+    downloadBtn.addEventListener('click', ()=>captureImage(true));
+    resetBtn.addEventListener('click', ()=>{
+      downloadBtn.style.display = 'none';
+      resetBtn.style.display = 'none';
+      captureBtn.style.display = 'inline-block';
+      video.style.display = 'block';
+      const img = document.getElementById('capturedImage');
+      if(img) img.remove();
+    });
+
+    async function captureImage(andDownload){
+      const rect = stage.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+
+      const vw = video.videoWidth, vh = video.videoHeight;
+      const sw = rect.width, sh = rect.height;
+      if(vw && vh){
+        const videoRatio = vw / vh;
+        const stageRatio = sw / sh;
+        let dw, dh, dx, dy;
+        if(videoRatio > stageRatio){
+          dh = sh; dw = dh * videoRatio; dx = (sw - dw)/2; dy = 0;
+        }else{
+          dw = sw; dh = dw / videoRatio; dx = 0; dy = (sh - dh)/2;
+        }
+        ctx.drawImage(video, dx, dy, dw, dh);
+      } else {
+        ctx.fillStyle='#000'; ctx.fillRect(0,0,sw,sh);
+      }
+
+      // texto CANCELADO
+      const fontSize = Math.min(rect.width * 0.18, 120);
+      ctx.font = `900 ${fontSize}px sans-serif`;
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(255,255,255,0.08)';
+      ctx.fillText('CANCELADO', rect.width/2 + fontSize*0.05, rect.height/2 + fontSize*0.05);
+      ctx.fillStyle='rgba(200,27,27,0.98)';
+      ctx.fillText('CANCELADO', rect.width/2, rect.height/2);
+
+      const dataURL = canvas.toDataURL('image/png');
+      downloadBtn.style.display='inline-block';
+      resetBtn.style.display='inline-block';
+      captureBtn.style.display='none';
+      video.style.display='none';
+
+      let img=document.getElementById('capturedImage');
+      if(!img){
+        img=document.createElement('img');
+        img.id='capturedImage';
+        img.style.width='100%';
+        img.style.height='100%';
+        img.style.objectFit='cover';
+        img.style.display='block';
+        stage.appendChild(img);
+      }
+      img.src=dataURL;
+
+      if(andDownload){
+        const a=document.createElement('a');
+        a.href=dataURL;
+        a.download='cancelado.png';
+        a.click();
+      }else{
+        downloadBtn.onclick=()=>{
+          const a=document.createElement('a');
+          a.href=dataURL;
+          a.download='cancelado.png';
+          a.click();
+        };
+      }
+    }
+
+    (async ()=>{
+      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+        alert('Navegador não suporta câmera (getUserMedia).');
+        return;
+      }
+      await listCameras();
+    })();
+  </script>
+</body>
+</html>
