@@ -1,343 +1,462 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>🔥 Filtro — CANCELADO 🔥</title>
-  <style>
-    :root {
-      --bg-black:#0b0b0b;
-      --red:#c81b1b;
-      --white:#ffffff;
-      --fire1:#ff4500;
-      --fire2:#ff8c00;
-      --fire3:#ffd700;
-    }
-
-    html,body {
-      height:100%;
-      margin:0;
-      background:linear-gradient(180deg,var(--bg-black),#2b0000);
-      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;
-      overflow-x:hidden;
-    }
-
-    .app {
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-start;
-      padding:12px;
-      box-sizing:border-box;
-    }
-
-    .stage {
-      position:relative;
-      width:clamp(280px,86vw,720px);
-      aspect-ratio:3/4;
-      border-radius:20px;
-      overflow:hidden;
-      box-shadow:0 10px 40px rgba(0,0,0,0.7);
-      background:#000;
-    }
-
-    video, canvas {
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    /* 🔥 Moldura de fogo animada */
-    .stage::before, .stage::after {
-      content:"";
-      position:absolute;
-      inset:-5px;
-      border-radius:24px;
-      z-index:5;
-      pointer-events:none;
-      animation:flames 1.5s infinite alternate ease-in-out;
-    }
-
-    .stage::before {
-      background:conic-gradient(from 0deg, var(--fire1), var(--fire2), var(--fire3), var(--fire1));
-      filter:blur(14px) brightness(1.2);
-      opacity:0.7;
-      animation-delay:0s;
-    }
-
-    .stage::after {
-      background:conic-gradient(from 180deg, var(--fire3), var(--fire2), var(--fire1), var(--fire3));
-      filter:blur(22px);
-      mix-blend-mode:screen;
-      opacity:0.5;
-      animation-delay:.5s;
-    }
-
-    @keyframes flames {
-      0% {transform:scale(1) rotate(0deg);}
-      50% {transform:scale(1.04) rotate(1deg);}
-      100% {transform:scale(1.02) rotate(-1deg);}
-    }
-
-    /* Overlay e selo CANCELADO */
-    .overlay {
-      pointer-events:none;
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:10;
-    }
-
-    .stamp {
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%) rotate(-6deg);
-      font-weight:900;
-      letter-spacing:6px;
-      font-size:clamp(48px,12vw,140px);
-      text-transform:uppercase;
-      color:var(--red);
-      text-align:center;
-      filter:drop-shadow(0 6px 14px rgba(0,0,0,0.7));
-      animation:pulse 1.5s infinite ease-in-out;
-    }
-
-    @keyframes pulse {
-      0%,100% {text-shadow:0 0 10px var(--red), 0 0 30px var(--red);}
-      50% {text-shadow:0 0 25px var(--fire2), 0 0 60px var(--fire3);}
-    }
-
-    .stamp::before {
-      content:"CANCELADO";
-      position:absolute;
-      inset:0;
-      color:var(--white);
-      transform:translate(6px,6px);
-      opacity:0.12;
-      font-weight:900;
-      z-index:-1;
-    }
-
-    /* Controles */
-    .controls {
-      margin-top:16px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:center;
-    }
-
-    button, select {
-      background:rgba(255,255,255,0.06);
-      border:1px solid rgba(255,255,255,0.08);
-      color:var(--white);
-      padding:8px 12px;
-      border-radius:10px;
-      font-size:15px;
-      backdrop-filter:blur(6px);
-      cursor:pointer;
-      transition:.2s;
-    }
-
-    button:hover {background:rgba(255,255,255,0.15);}
-    .primary {background:var(--red);border-color:rgba(0,0,0,0.2);color:var(--white);}
-    .small {padding:6px 8px;font-size:13px;}
-
-    .topbar {
-      width:100%;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:10px;
-      color:var(--white);
-    }
-
-    .hint {color:rgba(255,255,255,0.7);font-size:13px;}
-    footer {margin-top:10px;color:rgba(255,255,255,0.7);font-size:13px;}
-
-    @media (max-width:420px){
-      .stamp{letter-spacing:3px;transform:translate(-50%,-50%) rotate(-3deg);}
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Filtro — CANCELADO (FaceTrack)</title>
+<style>
+  :root{
+    --bg-black:#0b0b0b;
+    --red:#c81b1b;
+    --red-bright:#ff1a1a;
+    --white:#ffffff;
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg-black),#2b0000);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;overflow-x:hidden}
+  .app{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
+  .stage{position:relative;width:clamp(320px,95vw,900px);aspect-ratio:3/4;border-radius:18px;overflow:hidden;box-shadow:0 12px 50px rgba(0,0,0,0.8);background:#000}
+  video{display:block;width:100%;height:100%;object-fit:cover}
+  /* 2 canvases: mainCanvas (final), debugCanvas (optional) */
+  canvas{display:block;width:100%;height:100%;object-fit:cover}
+  /* red frame (no orange) */
+  .stage::before,.stage::after{content:"";position:absolute;inset:-6px;border-radius:22px;z-index:6;pointer-events:none;animation:flames 1.6s infinite alternate ease-in-out}
+  .stage::before{background:conic-gradient(from 0deg, var(--red), var(--red-bright), var(--red));filter:blur(18px) brightness(1.2);opacity:0.6}
+  .stage::after{background:conic-gradient(from 180deg, var(--red-bright), var(--red));filter:blur(26px);mix-blend-mode:screen;opacity:0.45}
+  @keyframes flames{0%{transform:scale(1) rotate(0)}50%{transform:scale(1.03) rotate(1deg)}100%{transform:scale(1.02) rotate(-1deg)}}
+  .overlay-html{position:absolute;inset:0;pointer-events:none;z-index:10;display:flex;align-items:center;justify-content:center}
+  /* dynamic HTML stamp that will be positioned over eyes */
+  #dynamicStamp{
+    position:absolute;
+    transform-origin:center;
+    font-weight:900;
+    letter-spacing:6px;
+    text-transform:uppercase;
+    color:var(--red-bright);
+    filter:drop-shadow(0 6px 12px rgba(0,0,0,0.7));
+    pointer-events:none;
+    z-index:12;
+    text-align:center;
+  }
+  #dynamicStamp::before{content:"CANCELADO";position:absolute;inset:0;color:var(--white);transform:translate(6px,6px);opacity:0.12;z-index:-1}
+  /* controls */
+  .controls{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+  button,select,input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:var(--white);padding:8px 12px;border-radius:10px;font-size:15px;backdrop-filter:blur(6px);cursor:pointer}
+  .primary{background:var(--red);border-color:rgba(0,0,0,0.3);color:var(--white)}
+  .topbar{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;color:var(--white)}
+  footer{margin-top:10px;color:rgba(255,255,255,0.7);font-size:13px;text-align:center}
+  /* mobile tweaks */
+  @media (max-width:600px){
+    #dynamicStamp{font-size:clamp(50px,18vw,120px)}
+    .stage{width:95vw}
+    button,input,select{font-size:16px;padding:10px 14px}
+  }
+</style>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="title">🔥 Filtro — CANCELADO 🔥</div>
-      <div class="hint">Permita acesso à câmera • Tire sua foto</div>
+      <div class="title">🔥 Filtro — CANCELADO (FaceTrack)</div>
+      <div class="hint">Permita câmera • Selo segue os olhos</div>
     </div>
 
     <div class="stage" id="stage">
+      <!-- raw video (hidden) -->
       <video id="video" playsinline autoplay muted></video>
-      <canvas id="captureCanvas" style="display:none"></canvas>
-      <div class="overlay">
-        <div class="stamp">CANCELADO</div>
+
+      <!-- canvas where final composition is painted -->
+      <canvas id="mainCanvas"></canvas>
+
+      <!-- HTML overlay for dynamic CANCELADO (so it's crisp text) -->
+      <div class="overlay-html">
+        <div id="dynamicStamp">CANCELADO</div>
       </div>
     </div>
 
     <div class="controls">
-      <select id="cameraSelect" class="small"></select>
-      <button id="flipBtn" class="small">Trocar câmera</button>
+      <select id="cameraSelect"></select>
+      <button id="flipBtn">Trocar câmera</button>
       <button id="startBtn" class="primary">Iniciar câmera</button>
       <button id="captureBtn" style="display:none" class="primary">Tirar foto</button>
       <button id="downloadBtn" style="display:none">Baixar imagem</button>
       <button id="resetBtn" style="display:none">Tirar outra</button>
+
+      <!-- smoothing strength -->
+      <label style="color:rgba(255,255,255,0.8);font-size:13px;margin-left:8px">
+        Suavização
+        <input id="smoothRange" type="range" min="0" max="12" value="5" style="vertical-align:middle;margin-left:6px">
+      </label>
     </div>
 
-    <footer>Feito para o projeto <b>Cultura do Cancelamento</b> — thierry 🔵</footer>
+    <footer>Feito por você — versão FaceTrack. Teste em Chrome/Edge/Safari moderno.</footer>
   </div>
 
+  <!-- MediaPipe FaceMesh (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
   <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('captureCanvas');
-    const cameraSelect = document.getElementById('cameraSelect');
-    const flipBtn = document.getElementById('flipBtn');
-    const startBtn = document.getElementById('startBtn');
-    const captureBtn = document.getElementById('captureBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const stage = document.getElementById('stage');
+  // Element refs
+  const video = document.getElementById('video');
+  const mainCanvas = document.getElementById('mainCanvas');
+  const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
 
-    let currentStream = null;
-    let devices = [];
+  const cameraSelect = document.getElementById('cameraSelect');
+  const flipBtn = document.getElementById('flipBtn');
+  const startBtn = document.getElementById('startBtn');
+  const captureBtn = document.getElementById('captureBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const smoothRange = document.getElementById('smoothRange');
+  const dynamicStamp = document.getElementById('dynamicStamp');
+  const stage = document.getElementById('stage');
 
-    async function listCameras(){
-      try{
-        const all = await navigator.mediaDevices.enumerateDevices();
-        devices = all.filter(d => d.kind === 'videoinput');
-        cameraSelect.innerHTML = '';
-        devices.forEach((d,i)=>{
-          const opt = document.createElement('option');
-          opt.value = d.deviceId;
-          opt.text = d.label || `Câmera ${i+1}`;
-          cameraSelect.appendChild(opt);
-        });
-      }catch(e){console.warn('Erro ao listar câmeras', e);}
+  let currentStream = null;
+  let devices = [];
+  let cameraDeviceId = null;
+  let cameraHelper = null;
+
+  // helper canvases (offscreen) for blur pipeline
+  const tmpCanvas = document.createElement('canvas');
+  const tmpCtx = tmpCanvas.getContext('2d');
+
+  // Utils: list cameras
+  async function listCameras(){
+    try{
+      const all = await navigator.mediaDevices.enumerateDevices();
+      devices = all.filter(d => d.kind === 'videoinput');
+      cameraSelect.innerHTML = '';
+      devices.forEach((d,i)=>{
+        const opt = document.createElement('option');
+        opt.value = d.deviceId;
+        opt.text = d.label || `Câmera ${i+1}`;
+        cameraSelect.appendChild(opt);
+      });
+    }catch(e){
+      console.warn('Erro listCameras', e);
     }
+  }
 
-    async function startCamera(deviceId){
-      if(currentStream){
-        currentStream.getTracks().forEach(t=>t.stop());
-      }
-      const constraints = {
-        audio:false,
-        video: deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'user'}
-      };
-      try{
-        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = currentStream;
-        await video.play().catch(()=>{});
-        captureBtn.style.display = 'inline-block';
-        startBtn.style.display = 'none';
-      }catch(err){
-        alert('Não foi possível acessar a câmera.\n' + err.message);
-      }
+  // Start camera
+  async function startCamera(deviceId){
+    if(currentStream){
+      currentStream.getTracks().forEach(t=>t.stop());
     }
-
-    cameraSelect.addEventListener('change', e=> startCamera(e.target.value));
-    flipBtn.addEventListener('click', ()=>{
-      if(devices.length < 2) return;
-      const idx = devices.findIndex(d => d.deviceId === cameraSelect.value);
-      const next = devices[(idx + 1) % devices.length];
-      startCamera(next.deviceId);
-    });
-
-    startBtn.addEventListener('click', async ()=>{
-      await listCameras();
-      const first = devices[0];
-      if(first) startCamera(first.deviceId);
-    });
-
-    captureBtn.addEventListener('click', ()=>captureImage(false));
-    downloadBtn.addEventListener('click', ()=>captureImage(true));
-    resetBtn.addEventListener('click', ()=>{
-      downloadBtn.style.display = 'none';
-      resetBtn.style.display = 'none';
+    const constraints = {
+      audio: false,
+      video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' }
+    };
+    try{
+      currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = currentStream;
+      await video.play().catch(()=>{});
       captureBtn.style.display = 'inline-block';
-      video.style.display = 'block';
-      const img = document.getElementById('capturedImage');
-      if(img) img.remove();
+      startBtn.style.display = 'none';
+      // set canvas pixel sizes to stage size
+      resizeCanvases();
+    }catch(err){
+      alert('Não foi possível acessar a câmera.\n' + err.message);
+    }
+  }
+
+  function resizeCanvases(){
+    const rect = stage.getBoundingClientRect();
+    // main canvas in CSS pixels, but we will draw scaled by devicePixelRatio
+    mainCanvas.width = rect.width * devicePixelRatio;
+    mainCanvas.height = rect.height * devicePixelRatio;
+    mainCanvas.style.width = rect.width + 'px';
+    mainCanvas.style.height = rect.height + 'px';
+
+    tmpCanvas.width = rect.width * devicePixelRatio;
+    tmpCanvas.height = rect.height * devicePixelRatio;
+  }
+
+  // FaceMesh init
+  const faceMesh = new FaceMesh({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+  });
+  faceMesh.setOptions({
+    maxNumFaces: 1,
+    refineLandmarks: true,
+    minDetectionConfidence: 0.6,
+    minTrackingConfidence: 0.6
+  });
+
+  // onResults: called every frame with landmarks
+  faceMesh.onResults((results) => {
+    // draw composition: original video + blurred face mask + overlay text
+    composeFrame(results);
+  });
+
+  // Start camera helper via MediaPipe camera utils (keeps frames flowing)
+  async function startFaceCamera(deviceId){
+    if(cameraHelper) cameraHelper.stop();
+    const constraints = {
+      video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' }
+    };
+    cameraHelper = new Camera(video, {
+      onFrame: async () => {
+        await faceMesh.send({image: video});
+      },
+      width: 1280,
+      height: 960,
     });
+    cameraHelper.start();
+  }
 
-    async function captureImage(andDownload){
-      const rect = stage.getBoundingClientRect();
-      canvas.width = rect.width * devicePixelRatio;
-      canvas.height = rect.height * devicePixelRatio;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(devicePixelRatio, devicePixelRatio);
+  // Compose final frame: original + blurred face region
+  function composeFrame(results){
+    // ensure canvas sizes
+    const rect = stage.getBoundingClientRect();
+    const W = mainCanvas.width; // device pixels
+    const H = mainCanvas.height;
 
-      const vw = video.videoWidth, vh = video.videoHeight;
-      const sw = rect.width, sh = rect.height;
-      if(vw && vh){
-        const videoRatio = vw / vh;
-        const stageRatio = sw / sh;
-        let dw, dh, dx, dy;
-        if(videoRatio > stageRatio){
-          dh = sh; dw = dh * videoRatio; dx = (sw - dw)/2; dy = 0;
-        }else{
-          dw = sw; dh = dw / videoRatio; dx = 0; dy = (sh - dh)/2;
-        }
-        ctx.drawImage(video, dx, dy, dw, dh);
+    // scale factor to draw video into device pixels
+    const cssW = rect.width;
+    const cssH = rect.height;
+    // draw original video into tmpCtx (device pixels)
+    tmpCtx.save();
+    tmpCtx.scale(devicePixelRatio, devicePixelRatio);
+    // fit-cover behavior (object-fit:cover)
+    const vw = video.videoWidth, vh = video.videoHeight;
+    let dx=0, dy=0, dw=cssW, dh=cssH;
+    if(vw && vh){
+      const vr = vw / vh, sr = cssW / cssH;
+      if(vr > sr){
+        // video wider => fit height
+        dh = cssH;
+        dw = dh * vr;
+        dx = (cssW - dw)/2;
+        dy = 0;
       } else {
-        ctx.fillStyle='#000'; ctx.fillRect(0,0,sw,sh);
+        dw = cssW;
+        dh = dw / vr;
+        dx = 0;
+        dy = (cssH - dh)/2;
       }
+    }
+    tmpCtx.clearRect(0,0,cssW,cssH);
+    tmpCtx.drawImage(video, dx, dy, dw, dh, 0, 0, cssW, cssH);
+    tmpCtx.restore();
 
-      // texto CANCELADO
-      const fontSize = Math.min(rect.width * 0.18, 120);
-      ctx.font = `900 ${fontSize}px sans-serif`;
-      ctx.textAlign='center';
-      ctx.textBaseline='middle';
-      ctx.fillStyle='rgba(255,255,255,0.08)';
-      ctx.fillText('CANCELADO', rect.width/2 + fontSize*0.05, rect.height/2 + fontSize*0.05);
-      ctx.fillStyle='rgba(200,27,27,0.98)';
-      ctx.fillText('CANCELADO', rect.width/2, rect.height/2);
+    // create blurred version into another offscreen by using canvas filter
+    // We'll draw on the main canvas a copy of tmpCanvas with filter then mask it
+    // convert smoothing level to blur px
+    const smoothVal = Number(smoothRange.value) || 5;
+    const blurPx = Math.min(20, smoothVal * 1.6); // soft cap
+    // prepare main ctx
+    ctx.save();
+    ctx.clearRect(0,0,W,H);
 
-      const dataURL = canvas.toDataURL('image/png');
-      downloadBtn.style.display='inline-block';
-      resetBtn.style.display='inline-block';
-      captureBtn.style.display='none';
-      video.style.display='none';
+    // draw original (scaled to device pixels)
+    ctx.drawImage(tmpCanvas, 0, 0, W, H);
 
-      let img=document.getElementById('capturedImage');
-      if(!img){
-        img=document.createElement('img');
-        img.id='capturedImage';
-        img.style.width='100%';
-        img.style.height='100%';
-        img.style.objectFit='cover';
-        img.style.display='block';
-        stage.appendChild(img);
-      }
-      img.src=dataURL;
+    // create blurred image on an offscreen (we reuse tmpCanvas but with filter)
+    // draw blurred frame onto another temporary canvas (we can reuse tmpCtx with filter)
+    tmpCtx.save();
+    tmpCtx.clearRect(0,0,cssW,cssH);
+    tmpCtx.filter = `blur(${blurPx}px) contrast(1.02) saturate(1.02)`;
+    tmpCtx.drawImage(video, dx, dy, dw, dh, 0, 0, cssW, cssH);
+    tmpCtx.filter = 'none';
+    tmpCtx.restore();
 
-      if(andDownload){
-        const a=document.createElement('a');
-        a.href=dataURL;
-        a.download='cancelado.png';
-        a.click();
-      }else{
-        downloadBtn.onclick=()=>{
-          const a=document.createElement('a');
-          a.href=dataURL;
-          a.download='cancelado.png';
-          a.click();
+    // Build a mask for the face using landmarks (if available)
+    if(results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0){
+      const landmarks = results.multiFaceLandmarks[0]; // array of {x,y,z} in normalized [0..1] relative to video image
+      // convert normalized landmark coordinates (relative to video) to canvas CSS pixels
+      // note: MediaPipe landmarks x,y are normalized relative to the input image (video). We used object-fit:cover transforms (dx,dy,dw,dh) when drawing video. We must map accordingly.
+      // Map normalized [0..1] to the displayed video rect coords
+      function landmarkToCanvas(lm){
+        // lm.x * vw gives coordinate in video intrinsic pixels
+        // We want position inside CSS box [0..cssW] considering dx/dy offsets
+        const xInVideo = lm.x * vw;
+        const yInVideo = lm.y * vh;
+        // map video pixel to CSS coords:
+        // video region mapped to CSS box at (dx,dy) size (dw,dh) from original video
+        const relX = (xInVideo - ( (vw - (dw*(vw/vw)))/2 )) ; // simpler approach below
+        // Better: compute scale from video->drawn: sx = dw / vw, sy = dh / vh , and offset (ox,oy) = dx,dy
+        const sx = dw / vw;
+        const sy = dh / vh;
+        const ox = dx;
+        const oy = dy;
+        const cssX = ox + (lm.x * vw) * sx;
+        const cssY = oy + (lm.y * vh) * sy;
+        // convert to device pixels (canvas)
+        return {
+          x: cssX * devicePixelRatio,
+          y: cssY * devicePixelRatio
         };
       }
+
+      // compute convex hull-ish path: use subset of landmarks around face contour to make mask nicer
+      // We'll use indices roughly corresponding to face silhouette from MediaPipe FaceMesh: 10..  127.. (approx). To be robust we just use all landmarks and compute a polygon by sorting by angle around center.
+      const pts = landmarks.map(lm => landmarkToCanvas(lm));
+      // compute centroid
+      let cx=0, cy=0;
+      pts.forEach(p => {cx += p.x; cy += p.y;});
+      cx /= pts.length; cy /= pts.length;
+      // sort by angle
+      pts.sort((a,b) => Math.atan2(a.y-cy, a.x-cx) - Math.atan2(b.y-cy, b.x-cx));
+      // compute radius to determine mask softness
+      let maxd = 0;
+      pts.forEach(p => {
+        const d = Math.hypot(p.x-cx, p.y-cy);
+        if(d > maxd) maxd = d;
+      });
+
+      // create mask on main canvas: we want to put blurred tmpCanvas only inside face polygon with feather
+      // Approach:
+      // 1) create clipping path using polygon (device pixels)
+      // 2) optionally expand path by drawing a soft circle per vertex to feather (approx)
+      // We'll create an offscreen mask by using ctx.globalCompositeOperation
+      // Steps: save, set clip path, draw blurred tmpCanvas, restore.
+
+      ctx.save();
+      // Create path
+      ctx.beginPath();
+      for(let i=0;i<pts.length;i++){
+        const p = pts[i];
+        if(i===0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+
+      // feather by drawing a shadow behind the path (approximate) — using shadowBlur won't help; instead use globalCompositeOperation trick:
+      // We create a temporary mask by drawing the closed path to an offscreen canvas as filled white, then blur it with ctx.filter and use it as alpha mask.
+      // Simpler (less heavy): expand polygon via ctx.lineWidth + stroke with round caps, then fill.
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      // increase the path slightly to cover cheeks: stroke then clip
+      ctx.lineWidth = Math.max(20 * devicePixelRatio * (smoothValNormalized(smoothRange.value)), 40);
+      ctx.strokeStyle = 'rgba(255,255,255,1)';
+      ctx.stroke();
+      // Now set composite to 'source-in' and draw blurred tmpCanvas
+      ctx.clip();
+      // draw blurred tmpCanvas (device pixels)
+      ctx.drawImage(tmpCanvas, 0, 0, W, H);
+      ctx.restore();
+
+      // Optionally add a subtle overlay to unify tone
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 0.06;
+      ctx.fillStyle = 'rgba(200,27,27,0.06)';
+      ctx.fillRect(0,0,W,H);
+      ctx.restore();
+
+      // Position dynamic stamp using eye landmarks average (use known eye indices if available)
+      // Common MediaPipe indices for eyes (approx): left = [33,133,160,159,158,157,173], right = [362,263,387,386,385,384,398]
+      const leftIdxs = [33,133,160,159,158,157,173];
+      const rightIdxs = [362,263,387,386,385,384,398];
+      const left = averageLandmarkPoints(landmarks, leftIdxs);
+      const right = averageLandmarkPoints(landmarks, rightIdxs);
+      // map to canvas coords
+      const leftC = landmarkToCanvas(left);
+      const rightC = landmarkToCanvas(right);
+      // center between eyes
+      const eyeCx = (leftC.x + rightC.x) / 2;
+      const eyeCy = (leftC.y + rightC.y) / 2;
+      // compute eye distance to estimate scale
+      const eyeDist = Math.hypot(leftC.x - rightC.x, leftC.y - rightC.y);
+      // position dynamicStamp (HTML) in CSS pixels (we must convert back)
+      const cssX = eyeCx / devicePixelRatio;
+      const cssY = eyeCy / devicePixelRatio;
+      // translate and scale
+      const stampScale = Math.max(1.4, Math.min(3.2, (eyeDist/devicePixelRatio) / 60)); // tweak
+      dynamicStamp.style.left = cssX + 'px';
+      dynamicStamp.style.top = (cssY + 12) + 'px'; // slight down offset
+      dynamicStamp.style.transform = `translate(-50%,-50%) rotate(-6deg) scale(${stampScale})`;
+      dynamicStamp.style.display = 'block';
+
+    } else {
+      // no face detected: just draw original and position main stamp center
+      dynamicStamp.style.left = (cssW/2) + 'px';
+      dynamicStamp.style.top = (cssH/2) + 'px';
+      dynamicStamp.style.transform = `translate(-50%,-50%) rotate(-6deg) scale(1.6)`;
+      dynamicStamp.style.display = 'block';
     }
 
-    (async ()=>{
-      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-        alert('Navegador não suporta câmera (getUserMedia).');
-        return;
+    ctx.restore();
+  }
+
+  function smoothValNormalized(val){
+    // map 0..12 to 0..1
+    return Math.min(1, Math.max(0, val/12));
+  }
+
+  function averageLandmarkPoints(landmarks, idxs){
+    // if an index doesn't exist, fallback to center
+    const out = {x:0,y:0,z:0}; let n=0;
+    idxs.forEach(i=>{
+      if(i >= 0 && i < landmarks.length){
+        out.x += landmarks[i].x; out.y += landmarks[i].y; out.z += landmarks[i].z; n++;
       }
-      await listCameras();
-    })();
+    });
+    if(n===0){
+      // fallback average of all
+      landmarks.forEach(l=>{out.x+=l.x; out.y+=l.y; out.z+=l.z;});
+      n = landmarks.length;
+    }
+    out.x /= n; out.y /= n; out.z /= n;
+    return out;
+  }
+
+  // capture / download logic
+  captureBtn.addEventListener('click', ()=>captureImage(false));
+  downloadBtn.addEventListener('click', ()=>captureImage(true));
+  resetBtn.addEventListener('click', ()=>{
+    downloadBtn.style.display='none'; resetBtn.style.display='none'; captureBtn.style.display='inline-block'; video.style.display='block';
+    const img = document.getElementById('capturedImage'); if(img) img.remove();
+  });
+
+  async function captureImage(andDownload){
+    // generate dataURL from mainCanvas (device pixels)
+    const dataURL = mainCanvas.toDataURL('image/png');
+    downloadBtn.style.display='inline-block'; resetBtn.style.display='inline-block'; captureBtn.style.display='none';
+    video.style.display='none';
+    // show image in stage (replace video)
+    let img = document.getElementById('capturedImage');
+    if(!img){ img = document.createElement('img'); img.id='capturedImage'; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover'; img.style.position='absolute'; img.style.left='0'; img.style.top='0'; img.style.zIndex='4'; stage.appendChild(img); }
+    img.src = dataURL;
+    if(andDownload){
+      const a = document.createElement('a'); a.href = dataURL; a.download = 'cancelado.png'; a.click();
+    } else {
+      downloadBtn.onclick = ()=>{ const a=document.createElement('a'); a.href=dataURL; a.download='cancelado.png'; a.click(); };
+    }
+  }
+
+  // UI events: camera select / flip / start
+  cameraSelect.addEventListener('change', (e)=>{ cameraDeviceId = e.target.value; startFaceCamera(cameraDeviceId); });
+  flipBtn.addEventListener('click', async ()=>{
+    if(devices.length < 2) return;
+    const idx = devices.findIndex(d => d.deviceId === (cameraDeviceId || cameraSelect.value));
+    const next = devices[(idx + 1) % devices.length];
+    cameraDeviceId = next.deviceId;
+    await startFaceCamera(cameraDeviceId);
+    cameraSelect.value = cameraDeviceId;
+  });
+  startBtn.addEventListener('click', async ()=>{
+    await listCameras();
+    if(devices.length>0){
+      cameraDeviceId = devices[0].deviceId;
+      cameraSelect.value = cameraDeviceId;
+      await startFaceCamera(cameraDeviceId);
+      startBtn.style.display = 'none';
+      captureBtn.style.display = 'inline-block';
+    } else {
+      // fallback to plain start
+      await startCamera(null);
+    }
+  });
+
+  // initial setup
+  (async ()=>{
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      alert('Navegador não suporta câmera (getUserMedia). Use Chrome/Edge/Safari moderno.');
+      return;
+    }
+    await listCameras();
+    resizeCanvases();
+    window.addEventListener('resize', resizeCanvases);
+  })();
+
   </script>
 </body>
 </html>
